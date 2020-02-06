@@ -17,6 +17,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.securitytest.test.captcha.VerificationCodeFilter;
 
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -68,16 +71,24 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		http.authorizeRequests()
 			.antMatchers("/admin/api/**").hasRole("ADMIN")
 			.antMatchers("/user/api/**").hasRole("USER")
-			.antMatchers("/app/api/**").permitAll()
+			.antMatchers("/app/api/**","/captcha.jpg").permitAll()
 			.anyRequest().authenticated()
 			.and()
-			.formLogin();
+			.csrf().disable()
+			.formLogin()
+			.loginPage("/mylogin/page")
+			.loginProcessingUrl("/auth/form")
+			.permitAll()
+			.and()
+			.sessionManagement();
+		http.addFilterBefore(new VerificationCodeFilter(), UsernamePasswordAuthenticationFilter.class);
+		
 	}
 
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 		// TODO Auto-generated method stub
-		auth.userDetailsService(userDetailsService).passwordEncoder(NoOpPasswordEncoder.getInstance());
+		auth.userDetailsService(userDetailsService);
 		//super.configure(auth);
 	}
 	
